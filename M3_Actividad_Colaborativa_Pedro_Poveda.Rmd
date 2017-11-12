@@ -1,0 +1,120 @@
+---
+title: "M3 Actividad Colaborativa"
+author: "Pedro Poveda"
+date: "November 13, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Resumen
+
+Este documento R Markdown describe las transformaciones realizadas sobre el siguiente dataset:
+
+**Evolución de la pesca de bajura subastada en la CAE por puertos**
+
+<https://www.europeandataportal.eu/data/es/dataset/http-datos-gob-es-catalogo-a16003011-evolucion-de-la-pesca-de-bajura-subastada-en-la-cae1>
+
+## Creación del directorio de trabajo
+
+```{r dir}
+if (!file.exists("D:/practicas_R/m3_actividad_colaborativa")){
+  dir.create("D:/practicas_R/m3_actividad_colaborativa")
+}
+
+setwd("D:/practicas_R/m3_actividad_colaborativa")
+
+getwd()
+```
+
+## Descarga del fichero
+
+Creamos el directorio de datos (si no existe) y descargamos el fichero.
+
+```{r desc}
+if (!file.exists("../datos")) {
+ dir.create("../datos")
+}
+
+fileURL <- "http://www.nasdap.net/estadisticas/datos/Pesca_evolbajura_8516.csv"
+
+download.file(fileURL,destfile="../datos/Pesca_evolbajura_8516.csv", method="auto")
+
+list.files("../datos")
+```
+
+# Creación de la tabla
+
+Una vez descargado el fichero, cargamos el dataset con la librería **knitr**.
+
+Como el fichero contiene líneas extra al principio y al final, las descartamos usando la función **head** y la opción **skip**.
+
+```{r table}
+library(knitr)
+
+pescaBajura <- head(read.table("../datos/Pesca_evolbajura_8516.csv",  skip = 1, row.names=NULL, sep=";", header=TRUE), -3)
+
+head(pescaBajura)[1:5]
+```
+
+# Eliminación de X en headers
+
+Quitamos la **X** de los headers de Año con **gsub**.
+
+```{r gsub}
+names(pescaBajura) <- gsub("X","",names(pescaBajura))
+
+names(pescaBajura)
+```
+
+## Unpivot 
+
+Con la función **melt** de la librería **reshape** hacemos el unpivot de las columnas de año.
+
+```{r unpivot}
+library(reshape)
+
+pescaBajuraUnpivot <- melt(pescaBajura, id=c("Unitatea.Unidad","Portuak.Puertos"))
+
+head(pescaBajuraUnpivot)
+```
+
+## Renombre de columnas 
+
+Las columnas **variable** y **value** se renombran a **Anio** y **Valor** respectivamente.
+
+```{r rename}
+names(pescaBajuraUnpivot)[3] <- c("Anio")
+
+names(pescaBajuraUnpivot)[4] <- c("Valor")
+
+head(pescaBajuraUnpivot)
+```
+
+## Escritura del dataset en fichero
+
+Creamos el directorio de escritura (si no existe) y escribimos el dataset obtenido en pasos anteriores.
+
+```{r write}
+if (!file.exists("../datos/output")) {
+ dir.create("../datos/output")
+ }
+ 
+write.table(pescaBajuraUnpivot,file="../datos/output/pescaBajuraTidy.csv", sep=";")
+
+list.files("../datos/output")
+```
+
+## Comprobación del fichero creado
+
+Por último, comprobamos que el fichero se ha creado correctamente.
+
+```{r check}
+pescaBajuraTidyRead <- read.csv2("../datos/output/pescaBajuraTidy.csv")
+
+head(pescaBajuraTidyRead)
+```
+
+
