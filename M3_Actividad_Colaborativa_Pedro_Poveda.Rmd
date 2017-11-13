@@ -15,7 +15,7 @@ Este documento R Markdown describe las transformaciones realizadas sobre el sigu
 
 ## Creación del directorio de trabajo
 
-```{r dir}
+```{r dir, echo=TRUE}
 if (!file.exists("D:/practicas_R/m3_actividad_colaborativa")){
   dir.create("D:/practicas_R/m3_actividad_colaborativa")
 }
@@ -57,34 +57,36 @@ head(pescaBajura)[1:5]
 
 # Eliminación de X en headers
 
-Quitamos la **X** de los headers de Año con **gsub**.
+Quitamos la **X** de los headers de Año con **gsub** y convertimos el resto a minúsculas.
 
 ```{r gsub}
-names(pescaBajura) <- gsub("X","",names(pescaBajura))
+names(pescaBajura) <- tolower(gsub("X","",names(pescaBajura)))
 
 names(pescaBajura)
 ```
 
-## Unpivot 
+## Trim y conversión de campos numéricos
 
-Con la función **melt** de la librería **reshape** hacemos el unpivot de las columnas de año.
+Los campos numéricos vienen con espacios en blanco. Con un **loop** los recorremos y hacemos **trim** y **class**.
 
-```{r unpivot}
-library(reshape)
+```{r trim}
+library(stringr)
 
-pescaBajuraUnpivot <- melt(pescaBajura, id=c("Unitatea.Unidad","Portuak.Puertos"))
-
-head(pescaBajuraUnpivot)
+for (i in 3:14) {
+  pescaBajura[[i]] <- str_trim(pescaBajura[[i]])
+  class(pescaBajura[[i]]) <- "numeric"
+}
 ```
 
-## Renombre de columnas 
 
-Las columnas **variable** y **value** se renombran a **Anio** y **Valor** respectivamente.
+## Unpivot 
 
-```{r rename}
-names(pescaBajuraUnpivot)[3] <- c("Anio")
+Con la función **melt** de la librería **reshape2** hacemos el unpivot de las columnas de año, asignándoles además un nuevo nombre (**anio** y **valor**)
 
-names(pescaBajuraUnpivot)[4] <- c("Valor")
+```{r unpivot}
+library(reshape2)
+
+pescaBajuraUnpivot <- melt(pescaBajura, id.vars=c("unitatea.unidad","portuak.puertos"), variable.name = "anio", value.name = "valor")
 
 head(pescaBajuraUnpivot)
 ```

@@ -24,17 +24,19 @@ pescaBajura <- head(read.table("../datos/Pesca_evolbajura_8516.csv",  skip = 1, 
 head(pescaBajura)
 
 #Limpieza de nombre de columnas
-names(pescaBajura) <- gsub("X","",names(pescaBajura))
+names(pescaBajura) <- tolower(gsub("X","",names(pescaBajura)))
 names(pescaBajura)
 
-#Unpivot del dataset
-library(reshape)
-pescaBajuraUnpivot <- melt(pescaBajura, id=c("Unitatea.Unidad","Portuak.Puertos"))
-head(pescaBajuraUnpivot)
+#Trim y casting de columnas numéricas con loop
+library(stringr)
+for (i in 3:14) {
+  pescaBajura[[i]] <- str_trim(pescaBajura[[i]])
+  class(pescaBajura[[i]]) <- "numeric"
+}
 
-#Cambio de nombre de columnas
-names(pescaBajuraUnpivot)[3] <- c("Anio")
-names(pescaBajuraUnpivot)[4] <- c("Valor")
+#Unpivot del dataset
+library(reshape2)
+pescaBajuraUnpivot <- melt(pescaBajura, id.vars=c("unitatea.unidad","portuak.puertos"), variable.name = "anio", value.name = "valor")
 head(pescaBajuraUnpivot)
 
 #Creación del directorio de salida
